@@ -9,38 +9,29 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-//@EnableWebSecurity
-public class SpringSecurityJDBCConfiguration extends WebSecurityConfigurerAdapter {
+@EnableWebSecurity
+public class SpringSecurityJPAConfiguration extends WebSecurityConfigurerAdapter {
 
-	@Qualifier("datasource1")
 	@Autowired
-	DataSource datasource;
-	
+	UserDetailsService userDetailsService;
+
 	@Override
 	public void configure(AuthenticationManagerBuilder auth) throws Exception {
-		
-		auth.jdbcAuthentication()
-		.dataSource(datasource)
-		.usersByUsernameQuery("select username, password, enabled "
-				+ "from users where username=?")
-		.authoritiesByUsernameQuery("select username, authority from authorities "
-				+ "where username=?");
+
+		auth.userDetailsService(userDetailsService);
 		
 	}
-	
+
 	@Override
 	public void configure(HttpSecurity http) throws Exception {
-		http.authorizeRequests()
-		.antMatchers("/admin/*").hasRole("ADMIN")
-		.antMatchers("/user/*").hasAnyRole("ADMIN","USER")
-		.antMatchers("/").permitAll()
-		.and().formLogin();
+		http.authorizeRequests().antMatchers("/admin/*").hasRole("ADMIN").antMatchers("/user/*")
+				.hasAnyRole("ADMIN", "USER").antMatchers("/").permitAll().and().formLogin();
 	}
-	
+
 	@Bean
 	public PasswordEncoder getPasswordEncoder() {
 		return NoOpPasswordEncoder.getInstance();
